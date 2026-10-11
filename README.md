@@ -4,7 +4,7 @@ This folder contains a small image-retrieval
 
 ## Environment
 
-- Python 3.10.11
+- Python 3.11
 
 From Bash, activate the existing virtual environment:
 
