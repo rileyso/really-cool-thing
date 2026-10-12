@@ -9,16 +9,17 @@ import pickle
 from extract_features import extract_features
 from sklearn.metrics.pairwise import cosine_similarity
 
-DATASET_PATH = Path("D:\Datasets\Aachen-Day-Night\db")
-QUERY_PATH = Path("D:/Datasets/Aachen-Day-Night/query/day/nexus4/IMG_20130210_163148.jpg")
+# DATASET_PATH = Path("D:\Datasets\Aachen-Day-Night\db")
+DATASET_PATH = Path("C:/Users/Riley/Uni/AMME5710/really-cool-thing/data")
+
+ 
+# QUERY_PATH = Path("D:/Datasets/Aachen-Day-Night/query/day/nexus4/IMG_20130210_163148.jpg")
+QUERY_PATH = Path("C:/Users/Riley/Uni/AMME5710/really-cool-thing/query/IMG_20261012_125222_1.jpg")
 # QUERY_PATH = DATASET_PATH / "998.jpg"
 
-with open("aachen_db_features.pkl", "rb") as f:
+with open("n216-feats.pkl", "rb") as f:
     db = pickle.load(f)
     
-# print(db[QUERY_PATH][:5])
-# print("shape:", db[QUERY_PATH].shape)
-
 weights = ResNet18_Weights.DEFAULT
 model = resnet18(weights=weights)
 model.fc = torch.nn.Identity()
@@ -28,7 +29,8 @@ preprocess = weights.transforms()
 query_features = extract_features(model, QUERY_PATH)
 
 results = []
-for image_path, db_features in db.items():
+for filename, db_features in db.items():
+    image_path = DATASET_PATH / filename
     similarity = cosine_similarity(
         query_features.reshape(1, -1),
         db_features.reshape(1, -1)
