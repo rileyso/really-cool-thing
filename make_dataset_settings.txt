@@ -1,0 +1,1 @@
+vid_filepath,room,loc,initial_direction,end_direction,cut_start,cut_end,n_directions
