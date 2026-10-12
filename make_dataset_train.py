@@ -6,7 +6,7 @@ import csv
 def make_dataset_train(settings_filepath, 
                         vid_filepath, training_folder_dir, 
                         room, loc, 
-                        initial_direction, end_direction, 
+                        initial_direction, end_direction, flip,
                         cut_start, cut_end, 
                         n_directions):
 
@@ -21,9 +21,10 @@ def make_dataset_train(settings_filepath,
                 loc = row[2]
                 initial_direction = int(row[3])
                 end_direction = int(row[4])
-                cut_start = float(row[5])
-                cut_end = float(row[6])
-                n_directions = int(row[7])
+                flip = int(row[5])
+                cut_start = float(row[6])
+                cut_end = float(row[7])
+                n_directions = int(row[8])
 
                 existing = True
                 break
@@ -32,7 +33,7 @@ def make_dataset_train(settings_filepath,
         print('No corresponding settings found. Will save as new data.')
 
     # Confirm settings used:
-    print(f"Using settings: {vid_filepath,room,loc,initial_direction,end_direction,cut_start,cut_end,n_directions}")
+    print(f"Using settings: {vid_filepath,room,loc,initial_direction,end_direction,flip,cut_start,cut_end,n_directions}")
 
     # Where to save the training data
     output_dir = os.path.join(training_folder_dir,  room + '_' + loc)
@@ -41,7 +42,11 @@ def make_dataset_train(settings_filepath,
     os.makedirs(output_dir, exist_ok=True)
 
     # Make directions
-    frame_directions = np.round((np.linspace(initial_direction, end_direction, n_directions))).astype(int)
+    if end_direction < initial_direction:
+        end_direction += 360
+    if flip:
+        end_direction -= 360
+    frame_directions = np.round((np.linspace(initial_direction, end_direction, n_directions) % 360)).astype(int)
 
     # Extract frames
     vid = cv2.VideoCapture(vid_filepath)
@@ -98,7 +103,7 @@ def make_dataset_train(settings_filepath,
     if not existing:
 
         with open(settings_filepath, 'a') as f:
-            data_write_list = [vid_filepath,room,loc,initial_direction,end_direction,cut_start,cut_end,n_directions]
+            data_write_list = [vid_filepath,room,loc,initial_direction,end_direction,flip,cut_start,cut_end,n_directions]
 
             # Construct string to write in
             data_write = '\n'
@@ -113,11 +118,15 @@ def make_dataset_train(settings_filepath,
 if __name__ == '__main__':
 
     vid_filepath = 'data/n216_door/VID_20261012_125338.mp4' # Filepath to video (str)
+
+    # Don't need to change the settings below if vid_filepath is already in make_dataset_settings.txt
+
     room = 'n216' # Room number (str)
     loc = 'door' # Location in the room (str)
 
     initial_direction = 0 # Initial direction that is being faced (deg)
     end_direction = 170 # End direction that is being faced (deg)
+    flip = 0 # Clockwise = 0, anticlockwise = 1
 
     cut_start = 0 # Starting time of video to cut (s)
     cut_end = 9 # End time of video to cut (-1 for end of video) (s)
@@ -130,7 +139,6 @@ if __name__ == '__main__':
     make_dataset_train(settings_filepath, 
                         vid_filepath, output_dir, 
                         room, loc, 
-                        initial_direction, 
-                        end_direction, 
+                        initial_direction, end_direction, flip, 
                         cut_start, cut_end, 
                         n_directions)
