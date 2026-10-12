@@ -11,11 +11,12 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 # DATASET_PATH = Path("D:\Datasets\Aachen-Day-Night\db")
 DATASET_PATH = Path("C:/Users/Riley/Uni/AMME5710/really-cool-thing/data")
-
+DATASET_PATH = Path('data')
  
 # QUERY_PATH = Path("D:/Datasets/Aachen-Day-Night/query/day/nexus4/IMG_20130210_163148.jpg")
 QUERY_PATH = Path("C:/Users/Riley/Uni/AMME5710/really-cool-thing/query/IMG_20261012_125222_1.jpg")
 # QUERY_PATH = DATASET_PATH / "998.jpg"
+QUERY_PATH = Path('query/IMG_20261012_125222_1.jpg')
 
 with open("n216-feats.pkl", "rb") as f:
     db = pickle.load(f)
