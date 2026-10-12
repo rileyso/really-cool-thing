@@ -3,12 +3,12 @@ import cv2
 import os
 import csv
 
-def make_dataset(settings_filepath, 
-                 vid_filepath, training_folder_dir, 
-                 room, loc, 
-                 initial_direction, end_direction, 
-                 cut_start, cut_end, 
-                 n_directions):
+def make_dataset_train(settings_filepath, 
+                        vid_filepath, training_folder_dir, 
+                        room, loc, 
+                        initial_direction, end_direction, 
+                        cut_start, cut_end, 
+                        n_directions):
 
     # Check to see if the video already exists in the settings file
     existing = False
@@ -127,10 +127,10 @@ if __name__ == '__main__':
     settings_filepath = 'make_dataset_settings.txt' # Store the settings used in here (leave it as 'make_dataset_settings.txt' probably)
     output_dir = 'data_train' # Big folder to save the data (leave it as 'data_train' probably)
         
-    make_dataset(settings_filepath, 
-                 vid_filepath, output_dir, 
-                 room, loc, 
-                 initial_direction, 
-                 end_direction, 
-                 cut_start, cut_end, 
-                 n_directions)
+    make_dataset_train(settings_filepath, 
+                        vid_filepath, output_dir, 
+                        room, loc, 
+                        initial_direction, 
+                        end_direction, 
+                        cut_start, cut_end, 
+                        n_directions)
