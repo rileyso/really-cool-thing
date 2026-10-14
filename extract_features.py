@@ -7,7 +7,7 @@ from torchvision.models import resnet18, ResNet18_Weights
 from PIL import Image
 import pickle
 
-DATASET_PATH = Path("C:/Users/Riley/Uni/AMME5710/really-cool-thing/data")
+DATASET_PATH = Path("really-cool-thing/data")
 
 ## Setup
 # Load Pretrained Resnet-18
