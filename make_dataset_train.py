@@ -117,19 +117,20 @@ def make_dataset_train(settings_filepath,
 
 if __name__ == '__main__':
 
-    vid_filepath = 'data/n216_door/VID_20261012_125338.mp4' # Filepath to video (str)
+    vid_filepath = r'data\stairwell_middle\VID_20261012_130418.mp4' # Filepath to video (str)
+    vid_filepath = vid_filepath.replace("\\", "/")
 
     # Don't need to change the settings below if vid_filepath is already in make_dataset_settings.txt
 
-    room = 'n216' # Room number (str)
-    loc = 'door' # Location in the room (str)
+    room = 'stairwell' # Room number (str)
+    loc = 'middle' # Location in the room (str)
 
-    initial_direction = 0 # Initial direction that is being faced (deg)
-    end_direction = 170 # End direction that is being faced (deg)
+    initial_direction = 30 # Initial direction that is being faced (deg)
+    end_direction = 210 # End direction that is being faced (deg)
     flip = 0 # Clockwise = 0, anticlockwise = 1
 
     cut_start = 0 # Starting time of video to cut (s)
-    cut_end = 9 # End time of video to cut (-1 for end of video) (s)
+    cut_end = -1 # End time of video to cut (-1 for end of video) (s)
 
     n_directions = 20 # How many images and directions to extract from the video (int)
 
