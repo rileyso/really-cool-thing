@@ -10,11 +10,10 @@ from extract_features import extract_features
 from sklearn.metrics.pairwise import cosine_similarity
 
 # DATASET_PATH = Path("D:\Datasets\Aachen-Day-Night\db")
-DATASET_PATH = Path("C:/Users/Riley/Uni/AMME5710/really-cool-thing/data")
+DATASET_PATH = Path("data")
 
- 
 # QUERY_PATH = Path("D:/Datasets/Aachen-Day-Night/query/day/nexus4/IMG_20130210_163148.jpg")
-QUERY_PATH = Path("C:/Users/Riley/Uni/AMME5710/really-cool-thing/query/IMG_20261012_125222_1.jpg")
+QUERY_PATH = Path("query/n216_door_im8_72.jpg")
 # QUERY_PATH = DATASET_PATH / "998.jpg"
 
 with open("n216-feats.pkl", "rb") as f:
@@ -68,7 +67,6 @@ image_1 = candidates[0][0]
 image_2 = candidates[1][0]
 image_3 = candidates[2][0]
 
-
 print(f"query: {image_0}")
 
 # Load image and extract ORB features
@@ -78,7 +76,6 @@ candidate_1 = cv2.imread(str(image_1), cv2.IMREAD_GRAYSCALE)
 candidate_2 = cv2.imread(str(image_2), cv2.IMREAD_GRAYSCALE)
 candidate_3 = cv2.imread(str(image_3), cv2.IMREAD_GRAYSCALE)
 
-
 # Extract features
 orb = cv2.ORB_create(nfeatures=1000) # "nfeatures" controls the sensitivity of how many features we want to extract
 kp1, des1 = orb.detectAndCompute(query,None) # second parameter is a mask image (only extract points inside mask)
@@ -86,7 +83,6 @@ kp2, des2 = orb.detectAndCompute(candidate_1,None)
 
 kp3, des3 = orb.detectAndCompute(candidate_2,None)
 kp4, des4 = orb.detectAndCompute(candidate_3,None)
-
 
 # print('found %d and %d feature points ...'%(len(kp1),len(kp2)))
 # kp: keypoints (image location of feature), des: descriptor: ORB feature descriptor for each keypoint
