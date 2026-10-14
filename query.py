@@ -9,11 +9,13 @@ import pickle
 from extract_features import extract_features
 from sklearn.metrics.pairwise import cosine_similarity
 
-# DATASET_PATH = Path("Aachen-Day-Night\db")
-DATASET_PATH = Path("data")
+# DATASET_PATH = Path("D:\Datasets\Aachen-Day-Night\db")
+DATASET_PATH = Path("C:/Users/Riley/Uni/AMME5710/really-cool-thing/data")
 
-# QUERY_PATH = Path(query/day/nexus4/IMG_20130210_163148.jpg")
-QUERY_PATH = Path("query/n216_door_im8_72.jpg")
+ 
+# QUERY_PATH = Path("D:/Datasets/Aachen-Day-Night/query/day/nexus4/IMG_20130210_163148.jpg")
+QUERY_PATH = Path("C:/Users/Riley/Uni/AMME5710/really-cool-thing/query/IMG_20261012_125222_1.jpg")
+# QUERY_PATH = DATASET_PATH / "998.jpg"
 
 with open("n216-feats.pkl", "rb") as f:
     db = pickle.load(f)

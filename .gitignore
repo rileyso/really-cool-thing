@@ -222,3 +222,8 @@ __marimo__/
 # Project data
 images/
 __pycache__/
+
+# Datasets
+Aachen-Day-Night/
+data/
+data_train/
