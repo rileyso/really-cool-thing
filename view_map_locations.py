@@ -50,7 +50,7 @@ def view_map_location(roomloc_filepath, room, loc, angle):
 if __name__ == '__main__':
 
     roomloc_filepath = 'roomloc_coords.txt'
-    filename = r'data_train\n214_middleleft\n214_middleleft_im3_148.jpg'
+    filename = r'data_train\n203_door\n203_door_im1_101.jpg'
 
     split = filename.split('\\')[-1]
     split = split.split('/')[-1]
