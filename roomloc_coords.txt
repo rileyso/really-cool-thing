@@ -7,3 +7,10 @@ stairwell,bottom,505,302
 stairwell,middle,533,355
 n214,middleleft,734,340
 n216,door,655,435
+corridor,n222,716,506
+corridor,n233,636,499
+corridor,n209,592,366
+corridor,stairs,564,282
+corridor,n210,549,234
+corridor,n203,537,202
+n203,door,491,218

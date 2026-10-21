@@ -42,6 +42,8 @@ def make_dataset_train(settings_filepath,
     os.makedirs(output_dir, exist_ok=True)
 
     # Make directions
+    if end_direction == initial_direction:
+        raise ValueError('Please make them different.')
     if end_direction < initial_direction:
         end_direction += 360
     if flip:
@@ -117,17 +119,17 @@ def make_dataset_train(settings_filepath,
 
 if __name__ == '__main__':
 
-    vid_filepath = r'data\stairwell_middle\VID_20261012_130418.mp4' # Filepath to video (str)
+    vid_filepath = r'data\n203_door\20261021_042203000_iOS.MOV' # Filepath to video (str)
     vid_filepath = vid_filepath.replace("\\", "/")
 
     # Don't need to change the settings below if vid_filepath is already in make_dataset_settings.txt
 
-    room = 'stairwell' # Room number (str)
-    loc = 'middle' # Location in the room (str)
+    room = 'n203' # Room number (str)
+    loc = 'door' # Location in the room (str)
 
-    initial_direction = 30 # Initial direction that is being faced (deg)
-    end_direction = 210 # End direction that is being faced (deg)
-    flip = 0 # Clockwise = 0, anticlockwise = 1
+    initial_direction = 120 # Initial direction that is being faced (deg)
+    end_direction = 121 # End direction that is being faced (deg)
+    flip = -1 # Clockwise = 0, anticlockwise = 1
 
     cut_start = 0 # Starting time of video to cut (s)
     cut_end = -1 # End time of video to cut (-1 for end of video) (s)
