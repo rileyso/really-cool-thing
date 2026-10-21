@@ -1,0 +1,9 @@
+stairwell,top,533,293
+n216,door,637,448
+n214,front,809,274
+n214,middleleft,730,348
+n214,middleright,707,266
+n216,front,845,382
+n216,middle,751,411
+stairwell,bottom,505,302
+stairwell,middle,533,355
