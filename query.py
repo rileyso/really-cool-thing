@@ -14,6 +14,13 @@ QUERY_PATH = Path("query/n216_door_im8_72.jpg")
 # QUERY_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/query/20261014_031616094_iOS.jpg")
 # QUERY_PATH = Path("c:/Users/Riley/OneDrive - The University of Sydney (Students)/query/20261014_031622580_iOS.jpg")
 
+class Node:
+    def __init__(self, room, in_room, x, y):
+        self.room = room
+        self.in_room = in_room
+        self.x = int(x)
+        self.y = int(y)
+
 def load_resnet18():
     weights = ResNet18_Weights.DEFAULT
     model = resnet18(weights=weights)
@@ -44,28 +51,31 @@ def main():
     results.sort(key=lambda x: x[1], reverse=True)
     candidates = results[:3]
 
+    print("candidate confidence rankings: ")
+
     for image_path, similarity in candidates:
         print(image_path, similarity)
         
-    fig, ax = plt.subplots(1, 4, figsize=(12, 5))
+    
 
     query_image = cv2.imread(str(QUERY_PATH))
     query_image = cv2.cvtColor(query_image, cv2.COLOR_BGR2RGB)
 
-    ax[0].imshow(query_image)
-    ax[0].set_title("Query")
-    ax[0].axis("off")
+    # fig, ax = plt.subplots(1, 4, figsize=(12, 5))
+    # ax[0].imshow(query_image)
+    # ax[0].set_title("Query")
+    # ax[0].axis("off")
 
-    for i, (image_path, similarity) in enumerate(candidates):
-        image = cv2.imread(str(image_path))
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    # for i, (image_path, similarity) in enumerate(candidates):
+    #     image = cv2.imread(str(image_path))
+    #     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        ax[i + 1].imshow(image)
-        ax[i + 1].set_title(f"Match {i+1}\n{similarity:.3f}")
-        ax[i + 1].axis("off")
+    #     ax[i + 1].imshow(image)
+    #     ax[i + 1].set_title(f"Match {i+1}\n{similarity:.3f}")
+    #     ax[i + 1].axis("off")
 
-    plt.tight_layout()
-    # plt.show()
+    # plt.tight_layout()
+    # # plt.show()
 
     image_0 = QUERY_PATH
     image_1 = candidates[0][0]
@@ -123,8 +133,42 @@ def main():
     plt.imshow(candidate_3c,'grey')
     plt.title(f'Right Image{image_3}')
     plt.gca().set_axis_off()
-    plt.show()
 
+    plt.figure(figsize=(6, 6))
+    bev = cv2.imread("usyd_map.png")
+    
+
+    print(f"final candidate: {candidates[0][0]}")
+    final = candidates[0][0]
+    print(Path(final))
+
+    try:
+        with open("roomloc_coords.txt", 'r') as file:
+            content = file.read()
+    except FileNotFoundError:
+        print("Error: the file doesn't exist")
+    node_list = []
+    for line in content.splitlines():
+        line = line.split(',')
+        name = line[0]
+        in_room = line[1]
+        xloc = line[2]
+        yloc = line[3]
+        node = Node(name, in_room, xloc, yloc)
+        node_list.append(node)
+
+    center_coordinates = (500, 400)
+    radius = 5
+    color = (255, 0, 255)
+    thickness = -1
+    
+    print(bev.shape)
+    for node in node_list:
+        # print(node.room)
+        cv2.circle(bev, (node.x,bev.shape[0]-node.y), radius, color, thickness)
+
+    plt.imshow(bev)
+    plt.show()
 
 
 if __name__ == "__main__":
