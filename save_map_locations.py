@@ -6,11 +6,20 @@ clicked_coords = []
 settings_filepath = 'make_dataset_settings.txt' # Store the settings used in here (leave it as 'make_dataset_settings.txt' probably)
 roomloc_filepath = 'roomloc_coords.txt'
 
-# Get rooms list
-room_list = []
-loc_list = []
+# Get the existing rooms
+room_list_existing = []
+loc_list_existing = []
+with open(roomloc_filepath, mode='r', newline='', encoding='utf-8') as f:
+    reader = csv.reader(f)
+    for row in reader:
+        room = row[0]
+        loc = row[1]
+        room_list_existing.append(room)
+        loc_list_existing.append(loc)
 
 # Get the rooms and locations in the settings_filepath
+room_list = []
+loc_list = []
 with open(settings_filepath, mode='r', newline='', encoding='utf-8') as f:
     reader = csv.reader(f)
     for row in reader:
@@ -19,8 +28,17 @@ with open(settings_filepath, mode='r', newline='', encoding='utf-8') as f:
         room = row[1]
         loc = row[2]
 
-        room_list.append(room)
-        loc_list.append(loc)
+        # Check if it is already saved in the existing rooms
+        existing = False
+        for i in range(len(room_list_existing)):
+            if (room == room_list_existing[i]) and (loc == loc_list_existing[i]):
+                existing = True
+                break
+
+        # Only write to it if the entry doesn't exist
+        if not existing:
+            room_list.append(room)
+            loc_list.append(loc)
 
 def onclick(event):
 
@@ -41,10 +59,14 @@ def onclick(event):
         # Stop after the last location
         if len(clicked_coords) == len(room_list):
             fig.canvas.mpl_disconnect(cid)
+            plt.close()
         else:
             # Change title to next location
             plt.title(f'{room_list[len(clicked_coords)]}, {loc_list[len(clicked_coords)]}')
 
+if len(room_list) == 0:
+    print('Nothing to save.')
+    exit()
 
 # Set up the figure and axes
 img = plt.imread('usyd_map.png')
@@ -70,7 +92,7 @@ if len(clicked_coords) != len(room_list):
     exit()
 
 # Write the room locations to the filepath
-with open(roomloc_filepath, 'w') as f:
+with open(roomloc_filepath, 'a') as f:
     f_write = ''
     for i in range(len(clicked_coords)):
         f_write += f'{room_list[i]},{loc_list[i]},{clicked_coords[i][0]},{clicked_coords[i][1]}\n'
