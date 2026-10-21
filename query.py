@@ -11,8 +11,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 DATASET_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/data_train")
 QUERY_PATH = Path("query/n216_door_im8_72.jpg")
-QUERY_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/query/20261014_031616094_iOS.jpg")
-QUERY_PATH = Path("c:/Users/Riley/OneDrive - The University of Sydney (Students)/query/20261014_031622580_iOS.jpg")
+# QUERY_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/query/20261014_031616094_iOS.jpg")
+# QUERY_PATH = Path("c:/Users/Riley/OneDrive - The University of Sydney (Students)/query/20261014_031622580_iOS.jpg")
 
 def load_resnet18():
     weights = ResNet18_Weights.DEFAULT
@@ -47,24 +47,24 @@ def main():
     for image_path, similarity in candidates:
         print(image_path, similarity)
         
-    # fig, ax = plt.subplots(1, 4, figsize=(12, 5))
+    fig, ax = plt.subplots(1, 4, figsize=(12, 5))
 
-    # query_image = cv2.imread(str(QUERY_PATH))
-    # query_image = cv2.cvtColor(query_image, cv2.COLOR_BGR2RGB)
+    query_image = cv2.imread(str(QUERY_PATH))
+    query_image = cv2.cvtColor(query_image, cv2.COLOR_BGR2RGB)
 
-    # ax[0].imshow(query_image)
-    # ax[0].set_title("Query")
-    # ax[0].axis("off")
+    ax[0].imshow(query_image)
+    ax[0].set_title("Query")
+    ax[0].axis("off")
 
-    # for i, (image_path, similarity) in enumerate(candidates):
-    #     image = cv2.imread(str(image_path))
-    #     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    for i, (image_path, similarity) in enumerate(candidates):
+        image = cv2.imread(str(image_path))
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-    #     ax[i + 1].imshow(image)
-    #     ax[i + 1].set_title(f"Match {i+1}\n{similarity:.3f}")
-    #     ax[i + 1].axis("off")
+        ax[i + 1].imshow(image)
+        ax[i + 1].set_title(f"Match {i+1}\n{similarity:.3f}")
+        ax[i + 1].axis("off")
 
-    # plt.tight_layout()
+    plt.tight_layout()
     # plt.show()
 
     image_0 = QUERY_PATH
