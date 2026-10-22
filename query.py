@@ -12,12 +12,12 @@ import heapq
 import networkx as nx
 import math
 DATASET_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/data_train")
-QUERY_PATH = Path("query/n216_door_im8_72.jpg")
-# QUERY_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/query/20261014_031616094_iOS.jpg")
+# QUERY_PATH = Path("IMG_20261012_125222_1.jpg")
+QUERY_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/query/IMG_20261012_125222_1.jpg")
 # QUERY_PATH = Path("c:/Users/Riley/OneDrive - The University of Sydney (Students)/query/20261014_031622580_iOS.jpg")
 
 DESTINATION = ("stairwell","bottom")
-
+DESTINATION = ("n203","door")
 class Node:
     def __init__(self, room, in_room, x, y):
         self.room = room
@@ -253,7 +253,21 @@ def main():
         node_color = (255, 0, 0) if node is destination else color
         cv2.circle(bev, point, radius, node_color, thickness)
 
-    plt.imshow(bev)
+    fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+
+    axes[0].imshow(cv2.cvtColor(bev, cv2.COLOR_BGR2RGB))
+    axes[0].set_title("Route")
+
+    axes[1].imshow(queryc)
+    axes[1].set_title("Query")
+
+    axes[2].imshow(candidate_1c)
+    axes[2].set_title("Matched")
+
+    for axis in axes:
+        axis.axis("off")
+
+    plt.tight_layout()
     plt.show()
 
 
