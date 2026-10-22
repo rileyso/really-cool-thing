@@ -9,6 +9,8 @@ import pickle
 from extract_features import extract_features
 from sklearn.metrics.pairwise import cosine_similarity
 import heapq
+import networkx as nx
+import math
 DATASET_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/data_train")
 QUERY_PATH = Path("query/n216_door_im8_72.jpg")
 # QUERY_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/query/20261014_031616094_iOS.jpg")
@@ -181,22 +183,75 @@ def main():
     print(f"destination {destination.room} coords:")
     print(destination.x, destination.y)
 
-    # Draw all nodes first.
-    for node in node_list:
+    # Keep connections explicit so they can be reviewed and corrected later.
+    connections = [
+        ("n203_door", "corridor_n203"),
+        ("corridor_n203", "corridor_n210"),
+        ("corridor_n210", "corridor_stairs"),
+        ("corridor_stairs", "corridor_n209"),
+        ("corridor_n209", "corridor_n233"),
+        ("corridor_n233", "corridor_n222"),
+        ("corridor_stairs", "stairwell_top"),
+        ("stairwell_top", "stairwell_bottom"),
+        ("stairwell_bottom", "stairwell_middle"),
+        ("corridor_n233", "n216_door"),
+        ("n216_door", "n216_middle"),
+        ("n216_middle", "n216_front"),
+        ("n214_front", "n214_middleright"),
+        ("n214_middleright", "n214_middleleft"),
+        ("n214_middleleft", "corridor_n209"),
+    ]
+
+    graph = nx.Graph()
+    node_by_name = {
+        f"{node.room}_{node.in_room}": node
+        for node in node_list
+    }
+
+    for name, node in node_by_name.items():
+        graph.add_node(name, pos=(node.x, node.y))
+
+    for node_a, node_b in connections:
+        distance = math.dist(
+            graph.nodes[node_a]["pos"],
+            graph.nodes[node_b]["pos"]
+        )
+        graph.add_edge(node_a, node_b, weight=distance)
+
+    source_name = f"{source.room}_{source.in_room}"
+    destination_name = f"{destination.room}_{destination.in_room}"
+
+    path = nx.astar_path(
+        graph,
+        source_name,
+        destination_name,
+        heuristic=lambda a, b: math.dist(
+            graph.nodes[a]["pos"], graph.nodes[b]["pos"]
+        ),
+        weight="weight",
+    )
+    print("A* path:", " -> ".join(path))
+
+    # Draw the path before the nodes so the nodes remain visible.
+    for node_a, node_b in zip(path, path[1:]):
+        a = node_by_name[node_a]
+        b = node_by_name[node_b]
+        cv2.line(
+            bev,
+            (a.x, bev.shape[0] - a.y),
+            (b.x, bev.shape[0] - b.y),
+            (0, 255, 0),
+            thickness=3,
+        )
+
+    # Draw only nodes currently used by the route.
+    # Other nodes stay in the graph, but remain hidden until their connections
+    # are reviewed and added to an active route.
+    for name in path:
+        node = node_by_name[name]
         point = (node.x, bev.shape[0] - node.y)
         node_color = (255, 0, 0) if node is destination else color
         cv2.circle(bev, point, radius, node_color, thickness)
-
-    # Draw a short arrow from the matched image location toward the destination.
-    start = (source.x, bev.shape[0] - source.y)
-    destination_point = (destination.x, bev.shape[0] - destination.y)
-    direction = np.array(destination_point, dtype=float) - start
-    distance = np.linalg.norm(direction)
-
-    if distance > 0:
-        arrow_length = min(30, distance)
-        end = tuple(np.round(np.array(start) + direction / distance * arrow_length).astype(int))
-        cv2.arrowedLine(bev, start, end, (255, 0, 0), thickness=3, tipLength=0.3)
 
     plt.imshow(bev)
     plt.show()
