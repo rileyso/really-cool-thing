@@ -40,10 +40,14 @@ def extract_features(model, preprocess, image_path):
 
 def main():
     db = {}
+    count= 0
     for image_path in DATASET_PATH.rglob("*.jpg"):
         filename = image_path.name
+        print(filename, count)
+        count+=1
         features_array = extract_features(model, preprocess, image_path)
         db[filename] = features_array
+    print(len(db))
     with open("aero-feats.pkl", "wb") as f:
         pickle.dump(db, f)
 
