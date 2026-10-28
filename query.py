@@ -12,9 +12,10 @@ import heapq
 import networkx as nx
 import math
 DATASET_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/data_train")
-# QUERY_PATH = Path("IMG_20261012_125222_1.jpg")
-QUERY_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/query/IMG_20261012_125222_1.jpg")
+# QUERY_PATH = Path("query/IMG_20261012_125222_1.jpg")
+QUERY_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/data_train/n216_door/n216_door_im13_131.jpg")
 # QUERY_PATH = Path("c:/Users/Riley/OneDrive - The University of Sydney (Students)/query/20261014_031622580_iOS.jpg")
+
 
 DESTINATION = ("stairwell","bottom")
 DESTINATION = ("n203","door")
@@ -44,7 +45,7 @@ def main():
 
     model, preprocess = load_resnet18()
     query_features = extract_features(model, preprocess, QUERY_PATH)
-
+    print(len(db))
 
     # Filter Similarity By Cosine Distance
     results = []
@@ -122,28 +123,28 @@ def main():
     for k in kp4:
         cv2.circle(candidate_3c,(int(k.pt[0]), int(k.pt[1])),3,(0,255,0),-1)
 
-    # plt.figure(figsize=(15, 5))
-    # plt.subplot(141)
-    # plt.imshow(queryc,'grey')
-    # plt.title(f'Left Image {image_0}')
-    # plt.gca().set_axis_off()
+    plt.figure(figsize=(15, 5))
+    plt.subplot(141)
+    plt.imshow(queryc,'grey')
+    plt.title(f'Left Image {image_0}')
+    plt.gca().set_axis_off()
 
-    # plt.subplot(142)
-    # plt.imshow(candidate_1c,'grey')
-    # plt.title(f'Right Image{image_1}')
-    # plt.gca().set_axis_off()
+    plt.subplot(142)
+    plt.imshow(candidate_1c,'grey')
+    plt.title(f'Right Image{image_1}')
+    plt.gca().set_axis_off()
 
-    # plt.subplot(143)
-    # plt.imshow(candidate_2c,'grey')
-    # plt.title(f'Right Image{image_2}')
-    # plt.gca().set_axis_off()
+    plt.subplot(143)
+    plt.imshow(candidate_2c,'grey')
+    plt.title(f'Right Image{image_2}')
+    plt.gca().set_axis_off()
 
-    # plt.subplot(144)
-    # plt.imshow(candidate_3c,'grey')
-    # plt.title(f'Right Image{image_3}')
-    # plt.gca().set_axis_off()
+    plt.subplot(144)
+    plt.imshow(candidate_3c,'grey')
+    plt.title(f'Right Image{image_3}')
+    plt.gca().set_axis_off()
 
-    # plt.figure(figsize=(6, 6))
+    plt.figure(figsize=(6, 6))
     bev = cv2.imread("usyd_map.png")
     
 
