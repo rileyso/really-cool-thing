@@ -14,8 +14,8 @@ DATASET_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Student
 # Load Pretrained Resnet-18
 weights = ResNet18_Weights.DEFAULT
 model = resnet18(weights=weights)
-# Remove the final classfication layer
-model.fc = torch.nn.Identity()
+# Stop before adaptive average pooling and the classifier so spatial layout remains.
+model = torch.nn.Sequential(*list(model.children())[:-2])
 model.eval()
 preprocess = weights.transforms()
 
@@ -29,16 +29,16 @@ def extract_features(model, preprocess, image_path):
     # Add batch dimensions
     # [3, 224, 224] -> [1, 3, 224, 224]
     image_tensor = image_tensor.unsqueeze(0)
-    
-    # Extract Features
+
+    # Use the same device as the model (CUDA when available).
+    image_tensor = image_tensor.to(next(model.parameters()).device)
     with torch.no_grad():
         features = model(image_tensor)
-    # Remove batch dimension
-    features = features.squeeze(0)
-    features_array = features.numpy()
+    features_array = features.squeeze(0).cpu().numpy()
     return features_array
 
 def main():
+    model.to("cuda" if torch.cuda.is_available() else "cpu")
     db = {}
     count= 0
     for image_path in DATASET_PATH.rglob("*.jpg"):

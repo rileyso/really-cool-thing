@@ -12,13 +12,14 @@ import heapq
 import networkx as nx
 import math
 DATASET_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/data_train")
-# QUERY_PATH = Path("query/IMG_20261012_125222_1.jpg")
-QUERY_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/data_train/n216_door/n216_door_im13_131.jpg")
-# QUERY_PATH = Path("c:/Users/Riley/OneDrive - The University of Sydney (Students)/query/20261014_031622580_iOS.jpg")
+QUERY_PATH = Path("query/IMG_20261012_125222_1.jpg")
+# QUERY_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/data_train/n216_door/n216_door_im13_131.jpg")
+# QUERY_PATH = Path("c:/Users/Riley/OneDrive - The University of Sydney (Students)/query/IMG_3679.jpeg")
 
 
 DESTINATION = ("stairwell","bottom")
-DESTINATION = ("n203","door")
+# DESTINATION = ("n216","door")
+
 class Node:
     def __init__(self, room, in_room, x, y):
         self.room = room
@@ -40,12 +41,13 @@ def load_resnet18():
     return model, preprocess
 
 def main():
-    with open("features/aero-feats.pkl", "rb") as f:
+    with open("aero-feats.pkl", "rb") as f:
         db = pickle.load(f)
 
     model, preprocess = load_resnet18()
     query_features = extract_features(model, preprocess, QUERY_PATH)
     print(len(db))
+    # print(db)
 
     # Filter Similarity By Cosine Distance
     results = []
@@ -66,26 +68,24 @@ def main():
     for image_path, similarity in candidates:
         print(image_path, similarity)
         
-    
-
     query_image = cv2.imread(str(QUERY_PATH))
     query_image = cv2.cvtColor(query_image, cv2.COLOR_BGR2RGB)
 
-    # fig, ax = plt.subplots(1, 4, figsize=(12, 5))
-    # ax[0].imshow(query_image)
-    # ax[0].set_title("Query")
-    # ax[0].axis("off")
+    fig, ax = plt.subplots(1, 4, figsize=(12, 5))
+    ax[0].imshow(query_image)
+    ax[0].set_title("Query")
+    ax[0].axis("off")
 
-    # for i, (image_path, similarity) in enumerate(candidates):
-    #     image = cv2.imread(str(image_path))
-    #     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    for i, (image_path, similarity) in enumerate(candidates):
+        image = cv2.imread(str(image_path))
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-    #     ax[i + 1].imshow(image)
-    #     ax[i + 1].set_title(f"Match {i+1}\n{similarity:.3f}")
-    #     ax[i + 1].axis("off")
+        ax[i + 1].imshow(image)
+        ax[i + 1].set_title(f"Match {i+1}\n{similarity:.3f}")
+        ax[i + 1].axis("off")
 
-    # plt.tight_layout()
-    # # plt.show()
+    plt.tight_layout()
+    # plt.show()
 
     image_0 = QUERY_PATH
     image_1 = candidates[0][0]
@@ -100,6 +100,9 @@ def main():
     candidate_1 = cv2.imread(str(image_1), cv2.IMREAD_GRAYSCALE)
     candidate_2 = cv2.imread(str(image_2), cv2.IMREAD_GRAYSCALE)
     candidate_3 = cv2.imread(str(image_3), cv2.IMREAD_GRAYSCALE)
+
+
+
 
     # Extract features
     orb = cv2.ORB_create(nfeatures=1000) # "nfeatures" controls the sensitivity of how many features we want to extract
@@ -126,25 +129,25 @@ def main():
     plt.figure(figsize=(15, 5))
     plt.subplot(141)
     plt.imshow(queryc,'grey')
-    plt.title(f'Left Image {image_0}')
+    # plt.title(f'Left Image {image_0}')
     plt.gca().set_axis_off()
 
     plt.subplot(142)
     plt.imshow(candidate_1c,'grey')
-    plt.title(f'Right Image{image_1}')
+    # plt.title(f'Right Image{image_1}')
     plt.gca().set_axis_off()
 
     plt.subplot(143)
     plt.imshow(candidate_2c,'grey')
-    plt.title(f'Right Image{image_2}')
+    # plt.title(f'Right Image{image_2}')
     plt.gca().set_axis_off()
 
     plt.subplot(144)
     plt.imshow(candidate_3c,'grey')
-    plt.title(f'Right Image{image_3}')
+    # plt.title(f'Right Image{image_3}')
     plt.gca().set_axis_off()
 
-    plt.figure(figsize=(6, 6))
+    # plt.figure(figsize=(6, 6))
     bev = cv2.imread("usyd_map.png")
     
 
@@ -270,7 +273,6 @@ def main():
 
     plt.tight_layout()
     plt.show()
-
 
 if __name__ == "__main__":
     main()
