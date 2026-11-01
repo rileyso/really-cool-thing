@@ -49,23 +49,15 @@ def main():
     print(len(db))
     # print(db)
 
-    scoring_method = 1 # 0 = Cosine similarity, 1 = Manhattan distance, 2 = Chebyshev
-
     # Filter Similarity By Cosine Distance
     results = []
     for filename, db_features in db.items():
         foldername = "_".join(filename.split("_")[:2])
         image_path = DATASET_PATH / foldername / filename
-        
-        query_reshaped = query_features.reshape(1, -1)
-        db_reshaped = db_features.reshape(1, -1)
-
-        if scoring_method == 0:
-            similarity = cosine_similarity(query_reshaped, db_reshaped)[0, 0]
-        elif scoring_method == 1:
-            similarity = np.sum(np.abs(query_features - db_features))
-        elif scoring_method == 2:
-            similarity = np.max(np.abs(query_features - db_features))
+        similarity = cosine_similarity(
+            query_features.reshape(1, -1),
+            db_features.reshape(1, -1)
+        )[0, 0]
         results.append((image_path, similarity))
 
     results.sort(key=lambda x: x[1], reverse=True)
