@@ -54,7 +54,7 @@ def show_path_images(room_path, close_enough, roomloc_filepath, datatrain_dir):
 
         roomloc = room_path[room_ind]
         pathlist = os.listdir(os.path.join(datatrain_dir, roomloc))
-        dist_list = []
+        angle_dist_list = []
 
         for im_name in pathlist:
 
@@ -66,11 +66,11 @@ def show_path_images(room_path, close_enough, roomloc_filepath, datatrain_dir):
             # Calculate angular distance between this angle and desired
             diff = abs(angle - angle_true) % 360
             dist = min(diff, 360 - diff)
-            dist_list.append(dist)
+            angle_dist_list.append(dist)
 
         # Find the best match
-        if min(dist_list) <= close_enough:
-            min_index = dist_list.index(min(dist_list))
+        if min(angle_dist_list) <= close_enough:
+            min_index = angle_dist_list.index(min(angle_dist_list))
             best_image[room_ind] = os.path.join(datatrain_dir, roomloc, pathlist[min_index])
 
     # Display image
@@ -83,8 +83,6 @@ def show_path_images(room_path, close_enough, roomloc_filepath, datatrain_dir):
         ax.set_title(f'Towards {room_path[i+1]}')
 
     plt.suptitle(f'{room_path[0]} to {room_path[-1]}')
-    # plt.tight_layout()
-    # plt.show()
 
 if __name__ == '__main__':
 
@@ -98,3 +96,6 @@ if __name__ == '__main__':
     datatrain_dir = 'data_train'
 
     show_path_images(room_path, close_enough, roomloc_filepath, datatrain_dir)
+
+    plt.tight_layout()
+    plt.show()
