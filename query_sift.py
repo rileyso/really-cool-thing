@@ -26,6 +26,9 @@ QUERY_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)
 QUERY_PATH = Path("c:/Users/Riley/OneDrive - The University of Sydney (Students)/query/IMG_3677.jpeg") #220  door
 QUERY_PATH = Path("c:/Users/Riley/OneDrive - The University of Sydney (Students)/query/IMG_3679.jpeg") #233 door
 
+DATASET_PATH = Path("data_train")
+QUERY_PATH = Path("query/IMG_3679.jpeg")
+
 DESTINATION = ("stairwell","bottom")
 # DESTINATION = ("n216","door")
 OCR_SCAN_LIMIT = 50
