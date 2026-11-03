@@ -11,6 +11,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 import heapq
 import networkx as nx
 import math
+from show_path_images import show_path_images
+
 DATASET_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/data_train")
 QUERY_PATH = Path("query/IMG_20261012_125222_1.jpg")
 # QUERY_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/data_train/n216_door/n216_door_im13_131.jpg")
@@ -162,7 +164,8 @@ def main():
     print(final)
 
     try:
-        with open("roomloc_coords.txt", 'r') as file:
+        roomloc_filepath = 'roomloc_coords.txt'
+        with open(roomloc_filepath, 'r') as file:
             content = file.read()
     except FileNotFoundError:
         print("Error: the file doesn't exist")
@@ -272,6 +275,9 @@ def main():
 
     for axis in axes:
         axis.axis("off")
+
+    close_enough = 20 # Angular distance (deg) which is close enough to be a match
+    show_path_images(path, close_enough, roomloc_filepath, DATASET_PATH)
 
     plt.tight_layout()
     plt.show()
