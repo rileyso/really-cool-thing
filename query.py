@@ -35,7 +35,9 @@ class Node:
 def load_resnet18():
     weights = ResNet18_Weights.DEFAULT
     model = resnet18(weights=weights)
-    model.fc = torch.nn.Identity()
+    # Match extract_features.py: preserve the convolutional spatial map.
+    model = torch.nn.Sequential(*list(model.children())[:-2])
+    model.to("cuda" if torch.cuda.is_available() else "cpu")
     model.eval()
     preprocess = weights.transforms()
     return model, preprocess

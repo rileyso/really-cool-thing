@@ -1,3 +1,4 @@
+import argparse
 from pathlib import Path
 import cv2
 import numpy as np
@@ -11,24 +12,23 @@ from sklearn.metrics.pairwise import cosine_similarity
 import heapq
 import networkx as nx
 import math
-import re
+from door_ocr import (load_reader, detect_door_text, texts_match,
+                      matching_texts)
 
-import easyocr
+ONEDRIVE_DIR = Path.home() / "OneDrive - The University of Sydney (Students)"
+DATASET_PATH = ONEDRIVE_DIR / "data_train"
+QUERY_DIR = ONEDRIVE_DIR / "query"
 
-DATASET_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/data_train")
+# Query image: uncomment one.
 # QUERY_PATH = Path("query/IMG_20261012_125222_1.jpg")
-# QUERY_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/data_train/n216_door/n216_door_im13_131.jpg")
-# QUERY_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/query/Screenshot 2026-10-30 132133.png")
-
-QUERY_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/data_train/n216_door/n216_door_im13_131.jpg")
-
-
-QUERY_PATH = Path("c:/Users/Riley/OneDrive - The University of Sydney (Students)/query/IMG_3677.jpeg") #220  door
-QUERY_PATH = Path("c:/Users/Riley/OneDrive - The University of Sydney (Students)/query/IMG_3679.jpeg") #233 door
+# QUERY_PATH = DATASET_PATH / "n216_door" / "n216_door_im13_131.jpg"
+# QUERY_PATH = QUERY_DIR / "18.png"  # was Screenshot 2026-10-30 132133.png
+# QUERY_PATH = QUERY_DIR / "7.jpeg"  # 220 door, was IMG_3677.jpeg
+QUERY_PATH = QUERY_DIR / "20.png"  # 233 door, was IMG_3660.jpeg
 
 DESTINATION = ("stairwell","bottom")
 # DESTINATION = ("n216","door")
-OCR_SCAN_LIMIT = 50
+OCR_SCAN_LIMIT = 100
 OCR_MATCH_LIMIT = 5
 
 class Node:
@@ -53,70 +53,27 @@ def load_resnet18():
     preprocess = weights.transforms()
     return model, preprocess
 
-def detect_door_tags(image_path, reader, show_preprocessing=False):
-    image = cv2.imread(str(image_path), cv2.IMREAD_GRAYSCALE)
-    if image is None:
-        raise FileNotFoundError(f"Could not load image: {image_path}")
-
-    # Door tags are expected above the middle of the view.
-    top_half = image[:image.shape[0] // 2, :]
-    enlarged = cv2.resize(top_half, None, fx=5, fy=5,
-                          interpolation=cv2.INTER_CUBIC)
-    # Otsu selects one high-contrast cutoff: white door text on black.
-    _, thresholded = cv2.threshold(
-        enlarged, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU,
-    )
-    morph_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
-    cleaned = cv2.morphologyEx(thresholded, cv2.MORPH_CLOSE, morph_kernel)
-
-    if show_preprocessing:
-        figure, axes = plt.subplots(1, 3, figsize=(9, 3),
-                                    constrained_layout=True)
-        for axis, processed_image, title in zip(
-                axes,
-                (top_half, thresholded, cleaned),
-                ("Query top half", "Otsu threshold", "Morphological close")): 
-            axis.imshow(processed_image, cmap="gray")
-            axis.set_title(title)
-            axis.axis("off")
-        figure.suptitle(f"OCR preprocessing: {image_path.name}")
-
-    detections = reader.readtext(
-        cleaned,
-        allowlist="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
-    )
-    tag_pattern = re.compile(r"^[A-Z]\d{3}$")
-    return {
-        re.sub(r"[^A-Za-z0-9]", "", text).upper()
-        for _, text, _ in detections
-        if tag_pattern.fullmatch(re.sub(r"[^A-Za-z0-9]", "", text).upper())
-    }
-
-
-def main():
-    try:
-        import easyocr
-    except ImportError as error:
-        raise RuntimeError(
-            "EasyOCR is required for door-tag detection. "
-            "Install it with: python -m pip install easyocr"
-        ) from error
-
-    use_gpu = torch.cuda.is_available()
-    print(f"EasyOCR device: {'GPU' if use_gpu else 'CPU'}")
-    ocr_reader = easyocr.Reader(["en"], gpu=use_gpu)
-    query_tags = detect_door_tags(QUERY_PATH, ocr_reader,
-                                  show_preprocessing=True)
-    if query_tags:
-        print(f"Query door tag(s): {', '.join(sorted(query_tags))}")
-    else:
-        print("No door tag detected by EasyOCR.")
-
+def load_databases():
     with open("aero-feats.pkl", "rb") as f:
         db = pickle.load(f)
 
-    model, preprocess = load_resnet18()
-    query_features = extract_features(model, preprocess, QUERY_PATH)
+    # Door text lists for the training images, precomputed by extract_door.py.
+    with open("aero-doors.pkl", "rb") as f:
+        door_db = pickle.load(f)
+    return db, door_db
+
+def find_best_match(query_path, ocr_reader, model, preprocess, db, door_db,
+                    verbose=False):
+    """Locate one query image against the training set.
+
+    CNN ranking, then the OCR text filter, then ORB/RANSAC picks the best of
+    the surviving candidates. Prints and figures only appear when verbose.
+    """
+    query_path = Path(query_path)
+    query_texts = detect_door_text(query_path, ocr_reader,
+                                   show_preprocessing=verbose)
+
+    query_features = extract_features(model, preprocess, query_path)
     # print(len(db))
     # print(db)
 
@@ -133,58 +90,61 @@ def main():
 
     results.sort(key=lambda x: x[1], reverse=True)
     candidates = results[:OCR_MATCH_LIMIT]
+    method = "cnn+orb (no query text)"
 
-    # Search further down the CNN ranking until enough OCR tag matches are found.
-    if query_tags:
-        candidates = []
+    # Search further down the CNN ranking until enough OCR text matches are found.
+    if query_texts:
+        text_candidates = []
         for index, (image_path, similarity) in enumerate(
                 results[:OCR_SCAN_LIMIT], start=1):
-            candidate_tags = detect_door_tags(image_path, ocr_reader)
-            print(f"Candidate {index} OCR ({image_path.name}): "
-                  f"{', '.join(sorted(candidate_tags)) or 'none'}")
-            if query_tags & candidate_tags:
-                candidates.append((image_path, similarity))
-                if len(candidates) == OCR_MATCH_LIMIT:
+            candidate_texts = door_db.get(image_path.name, [])
+            if verbose:
+                print(f"Candidate {index} OCR ({image_path.name}): "
+                      f"{candidate_texts or 'none'}")
+            if texts_match(query_texts, candidate_texts):
+                text_candidates.append((image_path, similarity))
+                if len(text_candidates) == OCR_MATCH_LIMIT:
                     break
-        if not candidates:
-            raise RuntimeError(
-                f"No matching door tag found in the top {OCR_SCAN_LIMIT} "
-                "CNN candidates."
+        if text_candidates:
+            candidates = text_candidates
+            method = "text+orb"
+        else:
+            # No door text in common: rank by the CNN alone, then ORB.
+            method = "cnn+orb (no text match)"
+            if verbose:
+                print(f"No matching door text in the top {OCR_SCAN_LIMIT} "
+                      "CNN candidates; falling back to the top CNN results.")
+
+    if verbose:
+        print("candidate confidence rankings: ")
+
+        for image_path, similarity in candidates:
+            print(image_path, similarity)
+
+        query_image = cv2.imread(str(query_path))
+        query_image = cv2.cvtColor(query_image, cv2.COLOR_BGR2RGB)
+
+        fig, ax = plt.subplots(1, len(candidates) + 1, figsize=(15, 5))
+        ax[0].imshow(query_image)
+        ax[0].set_title(f"Query\n{query_path.name}")
+        ax[0].axis("off")
+
+        for i, (image_path, similarity) in enumerate(candidates):
+            image = cv2.imread(str(image_path))
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+            ax[i + 1].imshow(image)
+            ax[i + 1].set_title(
+                f"Match {i + 1}\n{Path(image_path).name}\nCNN: {similarity:.3f}"
             )
+            ax[i + 1].axis("off")
 
-    print("candidate confidence rankings: ")
+        plt.tight_layout()
 
-    for image_path, similarity in candidates:
-        print(image_path, similarity)
-        
-    query_image = cv2.imread(str(QUERY_PATH))
-    query_image = cv2.cvtColor(query_image, cv2.COLOR_BGR2RGB)
-
-    fig, ax = plt.subplots(1, len(candidates) + 1, figsize=(15, 5))
-    ax[0].imshow(query_image)
-    ax[0].set_title(f"Query\n{Path(QUERY_PATH).name}")
-    ax[0].axis("off")
-
-    for i, (image_path, similarity) in enumerate(candidates):
-        image = cv2.imread(str(image_path))
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-        ax[i + 1].imshow(image)
-        ax[i + 1].set_title(
-            f"Match {i + 1}\n{Path(image_path).name}\nCNN: {similarity:.3f}"
-        )
-        ax[i + 1].axis("off")
-
-    plt.tight_layout()
-    # plt.show()
-
-    image_0 = QUERY_PATH
     image_paths = [candidate[0] for candidate in candidates]
 
-    print(f"query: {image_0}")
-
     # Load the query and all three candidates in grayscale for ORB.
-    query = cv2.imread(str(image_0), cv2.IMREAD_GRAYSCALE)
+    query = cv2.imread(str(query_path), cv2.IMREAD_GRAYSCALE)
     candidate_images = [
         cv2.imread(str(image_path), cv2.IMREAD_GRAYSCALE)
         for image_path in image_paths
@@ -251,75 +211,101 @@ def main():
         orb_match_counts.append(len(matches))
         ransac_masks.append(inlier_mask)
         ransac_inlier_counts.append(inlier_count)
-        print(f"Candidate {index}: {candidate_path} - "
-              f"{len(matches)} ORB matches, {inlier_count} RANSAC inliers")
+        if verbose:
+            print(f"Candidate {index}: {candidate_path} - "
+                  f"{len(matches)} ORB matches, {inlier_count} RANSAC inliers")
 
     best_index = max(range(len(orb_match_counts)),
                      key=orb_match_counts.__getitem__)
     best_candidate_path = image_paths[best_index]
-    print(f"Highest ORB match count: Candidate {best_index + 1} - "
-          f"{best_candidate_path} ({orb_match_counts[best_index]} matches, "
-          f"{ransac_inlier_counts[best_index]} RANSAC inliers)")
 
-    # Draw only RANSAC inliers; each subplot has the same allocated size.
-    correspondence_fig, correspondence_axes = plt.subplots(
-        1, len(image_paths), figsize=(10, 3.5), squeeze=False,
-        constrained_layout=True
-    )
-    for index, axis in enumerate(correspondence_axes[0]):
-        candidate_keypoints, _ = candidate_features[index]
-        correspondence = cv2.drawMatches(
-            query,
-            query_kp or [],
-            candidate_images[index],
-            candidate_keypoints or [],
-            orb_matches[index],
-            None,
-            matchColor=(0, 255, 0),
-            singlePointColor=(80, 80, 80),
-            matchesMask=ransac_masks[index],
-            flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS,
+    if verbose:
+        # Draw only RANSAC inliers; each subplot has the same allocated size.
+        correspondence_fig, correspondence_axes = plt.subplots(
+            1, len(image_paths), figsize=(10, 3.5), squeeze=False,
+            constrained_layout=True
         )
-        # auto aspect keeps every correspondence subplot the same size.
-        axis.imshow(
-            cv2.cvtColor(correspondence, cv2.COLOR_BGR2RGB),
-            aspect="auto",
-        )
-        axis.set_title(
-            f"Query: {Path(QUERY_PATH).name}\n"
-            f"Match {index + 1}: {Path(image_paths[index]).name}\n"
-            f"{len(orb_matches[index])} matches / "
-            f"{ransac_inlier_counts[index]} inliers"
-        )
-        axis.axis("off")
-    correspondence_fig.suptitle(
-        f"RANSAC inliers: {Path(QUERY_PATH).name}"
-    )
-
-    # Figure 3 temporarily disabled.
-    if False:
-        plt.figure(figsize=(15, 5))
-        total_images = len(candidate_colours) + 1
-        plt.subplot(1, total_images, 1)
-        plt.imshow(queryc)
-        plt.title(f"Query\n{Path(QUERY_PATH).name}")
-        plt.gca().set_axis_off()
-
-        for index, candidate_colour in enumerate(candidate_colours, start=1):
-            plt.subplot(1, total_images, index + 1)
-            plt.imshow(candidate_colour)
-            plt.title(
-                f"Match {index}\n{Path(image_paths[index - 1]).name}"
+        for index, axis in enumerate(correspondence_axes[0]):
+            candidate_keypoints, _ = candidate_features[index]
+            correspondence = cv2.drawMatches(
+                query,
+                query_kp or [],
+                candidate_images[index],
+                candidate_keypoints or [],
+                orb_matches[index],
+                None,
+                matchColor=(0, 255, 0),
+                singlePointColor=(80, 80, 80),
+                matchesMask=ransac_masks[index],
+                flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS,
             )
-            plt.gca().set_axis_off()
+            # auto aspect keeps every correspondence subplot the same size.
+            axis.imshow(
+                cv2.cvtColor(correspondence, cv2.COLOR_BGR2RGB),
+                aspect="auto",
+            )
+            axis.set_title(
+                f"Query: {query_path.name}\n"
+                f"Match {index + 1}: {Path(image_paths[index]).name}\n"
+                f"{len(orb_matches[index])} matches / "
+                f"{ransac_inlier_counts[index]} inliers"
+            )
+            axis.axis("off")
+        correspondence_fig.suptitle(
+            f"RANSAC inliers: {query_path.name}"
+        )
 
+    # Which query/candidate strings the text filter matched on.
+    matched_texts = []
+    if query_texts:
+        matched_texts = matching_texts(
+            query_texts, door_db.get(best_candidate_path.name, []))
 
+    return {
+        "method": method,
+        "query_texts": query_texts,
+        "matched_texts": matched_texts,
+        "best_index": best_index,
+        "best_candidate_path": best_candidate_path,
+        "orb_matches": orb_match_counts[best_index],
+        "ransac_inliers": ransac_inlier_counts[best_index],
+        "query_colour": queryc,
+        "best_colour": candidate_colours[best_index],
+    }
 
+def main(verbose=False):
+    # Quiet by default: only the final route figure is shown. verbose also
+    # shows the OCR, candidate and RANSAC figures and per-candidate output.
+    ocr_reader = load_reader()
+    db, door_db = load_databases()
+    model, preprocess = load_resnet18()
 
+    result = find_best_match(QUERY_PATH, ocr_reader, model, preprocess,
+                             db, door_db, verbose=verbose)
+
+    if result["query_texts"]:
+        print(f"Query door text: {result['query_texts']}")
+    else:
+        print("No door text detected by EasyOCR.")
+    print(f"query: {QUERY_PATH}")
+    print(f"Method: {result['method']}")
+
+    best_index = result["best_index"]
+    best_candidate_path = result["best_candidate_path"]
+    queryc = result["query_colour"]
+    best_colour = result["best_colour"]
+    print(f"Highest ORB match count: Candidate {best_index + 1} - "
+          f"{best_candidate_path} ({result['orb_matches']} matches, "
+          f"{result['ransac_inliers']} RANSAC inliers)")
+    if result["matched_texts"]:
+        print("Matched text: " + "; ".join(
+            query_text if query_text == candidate_text
+            else f"{query_text} ~ {candidate_text}"
+            for query_text, candidate_text in result["matched_texts"]))
 
     # plt.figure(figsize=(6, 6))
     bev = cv2.imread("usyd_map.png")
-    
+
 
     print(f"final candidate: {best_candidate_path}")
     final = str(best_candidate_path)
@@ -436,7 +422,7 @@ def main():
     axes[1].imshow(queryc)
     axes[1].set_title(f"Query\n{Path(QUERY_PATH).name}")
 
-    axes[2].imshow(candidate_colours[best_index])
+    axes[2].imshow(best_colour)
     axes[2].set_title(
         f"Match\n{Path(best_candidate_path).name}"
     )
@@ -449,4 +435,9 @@ def main():
     plt.show()
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--verbose", "-v", action="store_true",
+        help="show the OCR, candidate and RANSAC figures and per-candidate "
+             "output, not just the final route figure")
+    main(verbose=parser.parse_args().verbose)
