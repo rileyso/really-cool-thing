@@ -24,7 +24,7 @@ QUERY_DIR = ONEDRIVE_DIR / "query"
 # QUERY_PATH = DATASET_PATH / "n216_door" / "n216_door_im13_131.jpg"
 # QUERY_PATH = QUERY_DIR / "18.png"  # was Screenshot 2026-10-30 132133.png
 # QUERY_PATH = QUERY_DIR / "7.jpeg"  # 220 door, was IMG_3677.jpeg
-QUERY_PATH = QUERY_DIR / "20.png"  # 233 door, was IMG_3660.jpeg
+QUERY_PATH = QUERY_DIR / "14.jpeg"  # 233 door, was IMG_3660.jpeg
 
 DESTINATION = ("stairwell","bottom")
 # DESTINATION = ("n216","door")
@@ -159,17 +159,12 @@ def find_best_match(query_path, ocr_reader, model, preprocess, db, door_db,
         orb.detectAndCompute(image, None) for image in candidate_images
     ]
 
-    # Draw located keypoints.
-    queryc = cv2.cvtColor(query, cv2.COLOR_GRAY2RGB)
-    candidate_colours = [cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-                         for image in candidate_images]
-    for keypoint in query_kp or []:
-        cv2.circle(queryc, (int(keypoint.pt[0]), int(keypoint.pt[1])),
-                   3, (0, 255, 0), -1)
-    for image, (keypoints, _) in zip(candidate_colours, candidate_features):
-        for keypoint in keypoints or []:
-            cv2.circle(image, (int(keypoint.pt[0]), int(keypoint.pt[1])),
-                       3, (0, 255, 0), -1)
+    # Keep the final images in RGB without drawing ORB features over them.
+    queryc = cv2.cvtColor(cv2.imread(str(query_path)), cv2.COLOR_BGR2RGB)
+    candidate_colours = [
+        cv2.cvtColor(cv2.imread(str(image_path)), cv2.COLOR_BGR2RGB)
+        for image_path in image_paths
+    ]
 
     bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
 
@@ -283,25 +278,37 @@ def main(verbose=False):
     result = find_best_match(QUERY_PATH, ocr_reader, model, preprocess,
                              db, door_db, verbose=verbose)
 
-    if result["query_texts"]:
-        print(f"Query door text: {result['query_texts']}")
-    else:
-        print("No door text detected by EasyOCR.")
-    print(f"query: {QUERY_PATH}")
-    print(f"Method: {result['method']}")
-
     best_index = result["best_index"]
     best_candidate_path = result["best_candidate_path"]
     queryc = result["query_colour"]
     best_colour = result["best_colour"]
-    print(f"Highest ORB match count: Candidate {best_index + 1} - "
-          f"{best_candidate_path} ({result['orb_matches']} matches, "
-          f"{result['ransac_inliers']} RANSAC inliers)")
+
+    # Keep the console summary aligned and easy to scan.
+    label_width = 18
+    blue = "\033[94m"
+    green = "\033[92m"
+    reset = "\033[0m"
+    print("\nMatch summary")
+    if result["query_texts"]:
+        print(f"{'Query door text':<{label_width}}: "
+              f"{blue}{result['query_texts']}{reset}")
+    else:
+        print(f"{'Query door text':<{label_width}}: "
+              f"{blue}none detected{reset}")
+    print(f"{'Query image':<{label_width}}: {QUERY_PATH}")
+    print(f"{'Method':<{label_width}}: {result['method']}")
+    print(f"{'ORB matches':<{label_width}}: {result['orb_matches']}")
+    print(f"{'ORB inliers':<{label_width}}: "
+          f"{result['ransac_inliers']} (RANSAC)")
     if result["matched_texts"]:
-        print("Matched text: " + "; ".join(
+        matched_text = "; ".join(
             query_text if query_text == candidate_text
             else f"{query_text} ~ {candidate_text}"
-            for query_text, candidate_text in result["matched_texts"]))
+            for query_text, candidate_text in result["matched_texts"])
+        print(f"{'Matched text':<{label_width}}: "
+              f"{green}{matched_text}{reset}")
+    else:
+        print(f"{'Matched text':<{label_width}}: {green}none{reset}")
 
     # plt.figure(figsize=(6, 6))
     bev = cv2.imread("usyd_map.png")
@@ -420,17 +427,33 @@ def main(verbose=False):
     axes[0].set_title("Route")
 
     axes[1].imshow(queryc)
-    axes[1].set_title(f"Query\n{Path(QUERY_PATH).name}")
+    axes[1].set_title(f"Query\n{Path(QUERY_PATH).name}", color="blue")
 
     axes[2].imshow(best_colour)
     axes[2].set_title(
-        f"Match\n{Path(best_candidate_path).name}"
+        f"Match\n{Path(best_candidate_path).name}", color="green"
+    )
+    matched_label = "; ".join(
+        query_text if query_text == candidate_text
+        else f"{query_text} ~ {candidate_text}"
+        for query_text, candidate_text in result["matched_texts"]
+    ) or "none"
+    axes[2].text(
+        0.5, -0.08, f"Matched text: {matched_label}",
+        transform=axes[2].transAxes, ha="center", color="green",
+    )
+    axes[2].text(
+        0.5, -0.16,
+        f"ORB matches: {result['orb_matches']} | "
+        f"ORB inliers: {result['ransac_inliers']}",
+        transform=axes[2].transAxes, ha="center", color="black",
     )
 
     for axis in axes:
         axis.axis("off")
 
     plt.tight_layout()
+    fig.subplots_adjust(bottom=0.28)
 
     plt.show()
 
