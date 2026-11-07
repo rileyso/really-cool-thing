@@ -55,7 +55,7 @@ def main():
     print(len(db))
     # print(db)
 
-    scoring_method = 0 # 0 = Cosine similarity, 1 = Manhattan distance, 2 = Chebyshev
+    scoring_method = 0 # 0 = Cosine similarity, 1 = Manhattan distance, 2 = Chebyshev, 3 = Euclidean distance
 
     # Filter Similarity By Cosine Distance
     results = []
@@ -73,10 +73,11 @@ def main():
         if scoring_method == 0:
             similarity = cosine_similarity(query_reshaped, db_reshaped)[0, 0]
         elif scoring_method == 1:
-            similarity = np.sum(np.abs(query_features - db_features))
+            similarity = -np.sum(np.abs(query_features - db_features))
         elif scoring_method == 2:
-            similarity = np.max(np.abs(query_features - db_features))
-        results.append((image_path, similarity))
+            similarity = -np.max(np.abs(query_features - db_features))
+        elif scoring_method == 3:
+            similarity = -np.linalg.norm(query_features - db_features)
 
         results.append((image_path, similarity))
 
