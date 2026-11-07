@@ -9,6 +9,7 @@ import pickle
 
 # DATASET_PATH = Path("really-cool-thing/data_train")
 DATASET_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/data_train")
+DATASET_PATH = Path("data_train")
 
 ## Setup
 # Load Pretrained Resnet-18

@@ -15,6 +15,8 @@ from show_path_images import show_path_images
 
 DATASET_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/data_train")
 QUERY_PATH = Path("query/IMG_20261012_125222_1.jpg")
+DATASET_PATH = Path("data_train")
+QUERY_PATH = Path("query/1.jpg")
 # QUERY_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/data_train/n216_door/n216_door_im13_131.jpg")
 # QUERY_PATH = Path("c:/Users/Riley/OneDrive - The University of Sydney (Students)/query/IMG_3679.jpeg")
 
