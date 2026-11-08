@@ -6,12 +6,12 @@ import torch
 from torchvision.models import resnet18, ResNet18_Weights
 from PIL import Image
 import pickle
-from extract_features import extract_features
+from navigation.extract_features import extract_features
 from sklearn.metrics.pairwise import cosine_similarity
 import heapq
 import networkx as nx
 import math
-from show_path_images import show_path_images
+from navigation.show_path_images import show_path_images
 
 DATASET_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/data_train")
 QUERY_PATH = Path("query/IMG_20261012_125222_1.jpg")

@@ -1,9 +1,16 @@
 import argparse
 import csv
 import re
-from query_sift import (QUERY_DIR, find_best_match, load_databases,
+import sys
+from pathlib import Path
+
+CVIS_DIR = Path(__file__).resolve().parents[2] / "cvis"
+if str(CVIS_DIR) not in sys.path:
+    sys.path.insert(0, str(CVIS_DIR))
+
+from query_main import (QUERY_DIR, find_best_match, load_databases,
                         load_resnet18)
-from door_ocr import load_reader
+from navigation.door_ocr import load_reader
 
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png"}
 COLUMNS = ["query_file", "final_file", "final_location", "method",
@@ -99,7 +106,7 @@ def main(out_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Run query_sift's pipeline over every image in the "
+        description="Run query_main's pipeline over every image in the "
                     "query folder and save the results to a CSV.")
     parser.add_argument("--out", default="query_results.csv",
                         help="CSV output path (default: query_results.csv)")

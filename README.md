@@ -17,6 +17,34 @@ The system outputs:
 - Directional images for each stage of the route.
 - Batch query results saved to a CSV file.
 
+## Project layout
+
+```text
+navigation/  Core matching, OCR, feature extraction, and route display modules
+scripts/     Dataset, batch-query, map, and report utilities
+app/         NiceGUI application
+tests/       Tests
+../cvis/     External query_main.py entry point
+```
+
+The main query entry point is kept outside this repository at:
+
+```text
+C:\Users\Riley\Uni\AMME5710\cvis\query_main.py
+```
+
+Run it from the `cvis` folder:
+
+```bash
+python query_main.py
+```
+
+Run batch queries with:
+
+```bash
+python scripts/batch_query.py
+```
+
 ## Environment
 
 - Python 3.11

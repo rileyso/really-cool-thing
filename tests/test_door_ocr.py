@@ -1,6 +1,6 @@
 from collections import defaultdict
 from pathlib import Path
-from door_ocr import load_reader, detect_door_text
+from navigation.door_ocr import load_reader, detect_door_text
 
 DATASET_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/data_train")
 
