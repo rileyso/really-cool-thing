@@ -90,9 +90,9 @@ def main():
     parser = argparse.ArgumentParser(
         description="Create query-to-matched-reference figures from query_results.csv."
     )
-    parser.add_argument("--csv", default="query_results.csv")
+    parser.add_argument("--csv", default="outputs/query_results.csv")
     parser.add_argument("--query", help="one query filename, e.g. 20.png")
-    parser.add_argument("--output", default="report_query_match.png")
+    parser.add_argument("--output", default="outputs/report_query_match.png")
     parser.add_argument(
         "--all", action="store_true",
         help="plot every successful query match instead of one query",

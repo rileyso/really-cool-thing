@@ -39,7 +39,7 @@ query/
 
 - `data_train/` contains reference images grouped into `<room>_<location>` folders, such as `n203_door` or `corridor_n233`.
 - `query/` contains the photo to locate. The default filename is `query.jpg`; other files can be selected with `--query`.
-- Keep `usyd_map.png` and `roomloc_coords.txt` in the repository root.
+- Keep `roomloc_coords.txt` in the repository root; the map is stored at `assets/usyd_map.png`.
 
 Before the first query, generate the local feature databases:
 
@@ -60,20 +60,37 @@ Run batch queries with:
 python scripts/batch_query.py
 ```
 
-## Environment
+Generated CSV files, figures, and logs are saved in `outputs/`.
 
-- Python 3.11
+## Environment setup
 
-From Git Bash, activate the existing virtual environment:
+Requires Python 3.11. From the repository root, create and activate a virtual environment:
+
+Git Bash:
 
 ```bash
-source ../cvis/Scripts/activate
+python -m venv .venv
+source .venv/Scripts/activate
 ```
 
-Install the requirements:
+Windows PowerShell:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+Install the project requirements:
 
 ```bash
+python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
+```
+
+Verify the main dependencies:
+
+```bash
+python -c "import cv2, torch, torchvision, easyocr, networkx; print('Environment ready')"
 ```
 
 ## Dataset paths

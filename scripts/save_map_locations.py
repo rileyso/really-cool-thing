@@ -1,5 +1,8 @@
 import matplotlib.pyplot as plt
 import csv
+from pathlib import Path
+
+REPO_DIR = Path(__file__).resolve().parent.parent
 
 # 1. Initialize an empty list to store coordinates
 clicked_coords = []
@@ -69,7 +72,7 @@ if len(room_list) == 0:
     exit()
 
 # Set up the figure and axes
-img = plt.imread('usyd_map.png')
+img = plt.imread(REPO_DIR / 'assets' / 'usyd_map.png')
 
 fig, ax = plt.subplots()
 plot_extent = [0, img.shape[1], 0, img.shape[0]] 

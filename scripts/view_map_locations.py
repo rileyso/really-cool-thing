@@ -1,6 +1,9 @@
 import matplotlib.pyplot as plt
 import csv
 import numpy as np
+from pathlib import Path
+
+REPO_DIR = Path(__file__).resolve().parent.parent
 
 def view_map_location(roomloc_filepath, room, loc, angle):
 
@@ -24,7 +27,7 @@ def view_map_location(roomloc_filepath, room, loc, angle):
             raise ValueError(f'Room/loc pair ({room}, {loc}) not found.')
 
     # Plot map
-    img = plt.imread('usyd_map.png')
+    img = plt.imread(REPO_DIR / 'assets' / 'usyd_map.png')
     fig, ax = plt.subplots()
     plot_extent = [0, img.shape[1], 0, img.shape[0]] 
     ax.imshow(img, extent=plot_extent, aspect='auto', alpha=0.6)

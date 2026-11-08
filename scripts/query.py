@@ -153,7 +153,7 @@ def main():
     plt.gca().set_axis_off()
 
     # plt.figure(figsize=(6, 6))
-    bev = cv2.imread(str(REPO_DIR / "usyd_map.png"))
+    bev = cv2.imread(str(REPO_DIR / "assets" / "usyd_map.png"))
     
 
     print(f"final candidate: {candidates[0][0]}")

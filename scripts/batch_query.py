@@ -103,6 +103,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Run query_main's pipeline over every image in the "
                     "query folder and save the results to a CSV.")
-    parser.add_argument("--out", default="query_results.csv",
-                        help="CSV output path (default: query_results.csv)")
+    parser.add_argument("--out", default="outputs/query_results.csv",
+                        help="CSV output path (default: outputs/query_results.csv)")
     main(parser.parse_args().out)

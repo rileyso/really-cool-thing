@@ -320,7 +320,7 @@ def main(verbose=False, query_filename=QUERY_PATH,
         print(f"{'Matched text':<{label_width}}: {green}none{reset}")
 
     # plt.figure(figsize=(6, 6))
-    bev = cv2.imread(str(REPO_DIR / "usyd_map.png"))
+    bev = cv2.imread(str(REPO_DIR / "assets" / "usyd_map.png"))
 
 
     print(f"final candidate: {best_candidate_path}")
@@ -469,7 +469,8 @@ def main(verbose=False, query_filename=QUERY_PATH,
     show_path_images(path, close_enough, roomloc_path, DATASET_PATH)
     plt.show()
 
-def run_batch(query_dir=QUERY_DIR, log_path=REPO_DIR / "query_results.csv"):
+def run_batch(query_dir=QUERY_DIR,
+              log_path=REPO_DIR / "outputs" / "query_results.csv"):
     """Match every query image once and write a compact CSV log."""
     query_dir = Path(query_dir)
     query_paths = sorted(
@@ -519,7 +520,7 @@ if __name__ == "__main__":
         "--batch", action="store_true",
         help="match every image in the query directory and write a CSV log")
     parser.add_argument(
-        "--log", default="query_results.csv",
+        "--log", default="outputs/query_results.csv",
         help="CSV output path for --batch")
     parser.add_argument(
         "--verbose", "-v", action="store_true",
