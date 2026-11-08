@@ -6,19 +6,18 @@ import torch
 from torchvision.models import resnet18, ResNet18_Weights
 from PIL import Image
 import pickle
-from extract_features import extract_features
+from navigation.extract_features import extract_features
 from sklearn.metrics.pairwise import cosine_similarity
 import heapq
 import networkx as nx
 import math
-from show_path_images import show_path_images
+from navigation.show_path_images import show_path_images
 
-DATASET_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/data_train")
-QUERY_PATH = Path("query/IMG_20261012_125222_1.jpg")
-DATASET_PATH = Path("data_train")
-QUERY_PATH = Path("query/1.jpg")
-# QUERY_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/data_train/n216_door/n216_door_im13_131.jpg")
-# QUERY_PATH = Path("c:/Users/Riley/OneDrive - The University of Sydney (Students)/query/IMG_3679.jpeg")
+REPO_DIR = Path(__file__).resolve().parent.parent
+DATASET_PATH = REPO_DIR / "data_train"
+QUERY_PATH = REPO_DIR / "query/query.jpg"
+# QUERY_PATH = DATASET_PATH / "n216_door/n216_door_im13_131.jpg"
+# QUERY_PATH = REPO_DIR / "query/IMG_3679.jpeg"
 
 
 DESTINATION = ("stairwell","bottom")
@@ -47,7 +46,7 @@ def load_resnet18():
     return model, preprocess
 
 def main():
-    with open("aero-feats.pkl", "rb") as f:
+    with open(REPO_DIR / "aero-feats.pkl", "rb") as f:
         db = pickle.load(f)
 
     model, preprocess = load_resnet18()
@@ -55,30 +54,15 @@ def main():
     print(len(db))
     # print(db)
 
-    scoring_method = 0 # 0 = Cosine similarity, 1 = Manhattan distance, 2 = Chebyshev, 3 = Euclidean distance
-
     # Filter Similarity By Cosine Distance
     results = []
     for filename, db_features in db.items():
         foldername = "_".join(filename.split("_")[:2])
         image_path = DATASET_PATH / foldername / filename
-        # similarity = cosine_similarity(
-        #     query_features.reshape(1, -1),
-        #     db_features.reshape(1, -1)
-        # )[0, 0]
-
-        query_reshaped = query_features.reshape(1, -1)
-        db_reshaped = db_features.reshape(1, -1)
-
-        if scoring_method == 0:
-            similarity = cosine_similarity(query_reshaped, db_reshaped)[0, 0]
-        elif scoring_method == 1:
-            similarity = -np.sum(np.abs(query_features - db_features))
-        elif scoring_method == 2:
-            similarity = -np.max(np.abs(query_features - db_features))
-        elif scoring_method == 3:
-            similarity = -np.linalg.norm(query_features - db_features)
-
+        similarity = cosine_similarity(
+            query_features.reshape(1, -1),
+            db_features.reshape(1, -1)
+        )[0, 0]
         results.append((image_path, similarity))
 
     results.sort(key=lambda x: x[1], reverse=True)
@@ -169,7 +153,7 @@ def main():
     plt.gca().set_axis_off()
 
     # plt.figure(figsize=(6, 6))
-    bev = cv2.imread("usyd_map.png")
+    bev = cv2.imread(str(REPO_DIR / "usyd_map.png"))
     
 
     print(f"final candidate: {candidates[0][0]}")
@@ -181,7 +165,7 @@ def main():
     print(final)
 
     try:
-        roomloc_filepath = 'roomloc_coords.txt'
+        roomloc_filepath = REPO_DIR / 'roomloc_coords.txt'
         with open(roomloc_filepath, 'r') as file:
             content = file.read()
     except FileNotFoundError:
