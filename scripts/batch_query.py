@@ -1,15 +1,10 @@
 import argparse
 import csv
 import re
-import sys
 from pathlib import Path
 
-CVIS_DIR = Path(__file__).resolve().parents[2] / "cvis"
-if str(CVIS_DIR) not in sys.path:
-    sys.path.insert(0, str(CVIS_DIR))
-
-from query_main import (QUERY_DIR, find_best_match, load_databases,
-                        load_resnet18)
+from navigation.query_main import (QUERY_DIR, find_best_match,
+                                  load_databases, load_resnet18)
 from navigation.door_ocr import load_reader
 
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png"}

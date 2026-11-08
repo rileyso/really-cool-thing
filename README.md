@@ -20,23 +20,16 @@ The system outputs:
 ## Project layout
 
 ```text
-navigation/  Core matching, OCR, feature extraction, and route display modules
+navigation/  Main query pipeline, OCR, features, and route modules
 scripts/     Dataset, batch-query, map, and report utilities
 app/         NiceGUI application
 tests/       Tests
-../cvis/     External query_main.py entry point
 ```
 
-The main query entry point is kept outside this repository at:
-
-```text
-C:\Users\Riley\Uni\AMME5710\cvis\query_main.py
-```
-
-Run it from the `cvis` folder:
+Run the main query pipeline from the repository root:
 
 ```bash
-python query_main.py
+python -m navigation.query_main
 ```
 
 Run batch queries with:
