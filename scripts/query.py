@@ -13,10 +13,11 @@ import networkx as nx
 import math
 from navigation.show_path_images import show_path_images
 
-DATASET_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/data_train")
-QUERY_PATH = Path("query/IMG_20261012_125222_1.jpg")
-# QUERY_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/data_train/n216_door/n216_door_im13_131.jpg")
-# QUERY_PATH = Path("c:/Users/Riley/OneDrive - The University of Sydney (Students)/query/IMG_3679.jpeg")
+REPO_DIR = Path(__file__).resolve().parent.parent
+DATASET_PATH = REPO_DIR / "data_train"
+QUERY_PATH = REPO_DIR / "query/query.jpg"
+# QUERY_PATH = DATASET_PATH / "n216_door/n216_door_im13_131.jpg"
+# QUERY_PATH = REPO_DIR / "query/IMG_3679.jpeg"
 
 
 DESTINATION = ("stairwell","bottom")
@@ -45,7 +46,7 @@ def load_resnet18():
     return model, preprocess
 
 def main():
-    with open("aero-feats.pkl", "rb") as f:
+    with open(REPO_DIR / "aero-feats.pkl", "rb") as f:
         db = pickle.load(f)
 
     model, preprocess = load_resnet18()
@@ -152,7 +153,7 @@ def main():
     plt.gca().set_axis_off()
 
     # plt.figure(figsize=(6, 6))
-    bev = cv2.imread("usyd_map.png")
+    bev = cv2.imread(str(REPO_DIR / "usyd_map.png"))
     
 
     print(f"final candidate: {candidates[0][0]}")
@@ -164,7 +165,7 @@ def main():
     print(final)
 
     try:
-        roomloc_filepath = 'roomloc_coords.txt'
+        roomloc_filepath = REPO_DIR / 'roomloc_coords.txt'
         with open(roomloc_filepath, 'r') as file:
             content = file.read()
     except FileNotFoundError:

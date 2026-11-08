@@ -5,9 +5,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from PIL import Image, ImageOps
 
-ONEDRIVE_DIR = Path.home() / "OneDrive - The University of Sydney (Students)"
-QUERY_DIR = ONEDRIVE_DIR / "query"
-DATASET_DIR = ONEDRIVE_DIR / "data_train"
+REPO_DIR = Path(__file__).resolve().parent.parent
+QUERY_DIR = REPO_DIR / "query"
+DATASET_DIR = REPO_DIR / "data_train"
 
 
 def image_path(filename):

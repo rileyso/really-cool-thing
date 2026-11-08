@@ -22,14 +22,36 @@ The system outputs:
 ```text
 navigation/  Main query pipeline, OCR, features, and route modules
 scripts/     Dataset, batch-query, map, and report utilities
-app/         NiceGUI application
 tests/       Tests
+```
+
+## Local data setup
+
+No global or OneDrive paths are required. Put the reference images and query photos in these repository folders:
+
+```text
+data_train/
+└── n203_door/
+    └── n203_door_im0_120.jpg
+query/
+└── query.jpg
+```
+
+- `data_train/` contains reference images grouped into `<room>_<location>` folders, such as `n203_door` or `corridor_n233`.
+- `query/` contains the photo to locate. The default filename is `query.jpg`; other files can be selected with `--query`.
+- Keep `usyd_map.png` and `roomloc_coords.txt` in the repository root.
+
+Before the first query, generate the local feature databases:
+
+```bash
+python -m navigation.extract_features
+python scripts/extract_door.py
 ```
 
 Run the main query pipeline from the repository root:
 
 ```bash
-python -m navigation.query_main
+python -m navigation.query_main --query query.jpg --destination stairwell bottom
 ```
 
 Run batch queries with:
@@ -42,10 +64,10 @@ python scripts/batch_query.py
 
 - Python 3.11
 
-From Bash, activate the existing virtual environment:
+From Git Bash, activate the existing virtual environment:
 
 ```bash
-source ../.amme5710/Scripts/activate
+source ../cvis/Scripts/activate
 ```
 
 Install the requirements:

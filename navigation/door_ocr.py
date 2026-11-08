@@ -20,8 +20,8 @@ TEXT_MATCH_RATIO = 0.85
 MIN_PARTIAL_LENGTH = 4
 
 # Hardcoded image for manual testing (python door_ocr.py).
-# IMAGE_PATH = Path("C:\Users\Riley\OneDrive - The University of Sydney (Students)\data_train\corridor_n203\corridor_n203_im2_262.jpg")
-DATA_DIR = Path.home() / "OneDrive - The University of Sydney (Students)" / "query"
+# IMAGE_PATH = DATA_DIR / "corridor_n203/corridor_n203_im2_262.jpg"
+DATA_DIR = Path(__file__).resolve().parent.parent / "query"
 
 IMAGE_PATH = DATA_DIR / "corridor_n203" / "corridor_n203_im2_262.jpg"
 

@@ -20,16 +20,15 @@ from navigation.door_ocr import (load_reader, detect_door_text, texts_match,
                                   matching_texts)
 from navigation.show_path_images import show_path_images
 
-ONEDRIVE_DIR = Path.home() / "OneDrive - The University of Sydney (Students)"
-DATASET_PATH = ONEDRIVE_DIR / "data_train"
-QUERY_DIR = ONEDRIVE_DIR / "query"
+DATASET_PATH = REPO_DIR / "data_train"
+QUERY_DIR = REPO_DIR / "query"
 
 # Query image: uncomment one.
 # QUERY_PATH = Path("query/IMG_20261012_125222_1.jpg")
 # QUERY_PATH = DATASET_PATH / "n216_door" / "n216_door_im13_131.jpg"
 # QUERY_PATH = QUERY_DIR / "18.png"  # was Screenshot 2026-10-30 132133.png
 # QUERY_PATH = QUERY_DIR / "7.jpeg"  # 220 door, was IMG_3677.jpeg
-QUERY_PATH = QUERY_DIR / "20.png"  # 233 door, was IMG_3660.jpeg
+QUERY_PATH = QUERY_DIR / "query.jpg"
 
 DESTINATION = ("stairwell","bottom")
 # DESTINATION = ("n216","door")
@@ -470,7 +469,7 @@ def main(verbose=False, query_filename=QUERY_PATH,
     show_path_images(path, close_enough, roomloc_path, DATASET_PATH)
     plt.show()
 
-def run_batch(query_dir=QUERY_DIR, log_path="query_results.csv"):
+def run_batch(query_dir=QUERY_DIR, log_path=REPO_DIR / "query_results.csv"):
     """Match every query image once and write a compact CSV log."""
     query_dir = Path(query_dir)
     query_paths = sorted(

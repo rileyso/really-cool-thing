@@ -2,8 +2,9 @@ from pathlib import Path
 import pickle
 from navigation.door_ocr import load_reader, detect_door_text
 
-DATASET_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/data_train")
-OUTPUT_PATH = "aero-doors.pkl"
+REPO_DIR = Path(__file__).resolve().parent.parent
+DATASET_PATH = REPO_DIR / "data_train"
+OUTPUT_PATH = REPO_DIR / "aero-doors.pkl"
 
 
 def main():

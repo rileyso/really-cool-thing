@@ -7,8 +7,8 @@ from torchvision.models import resnet18, ResNet18_Weights
 from PIL import Image
 import pickle
 
-# DATASET_PATH = Path("really-cool-thing/data_train")
-DATASET_PATH = Path("C:/Users/Riley/OneDrive - The University of Sydney (Students)/data_train")
+REPO_DIR = Path(__file__).resolve().parent.parent
+DATASET_PATH = REPO_DIR / "data_train"
 
 ## Setup
 # Load Pretrained Resnet-18
@@ -48,7 +48,7 @@ def main():
         features_array = extract_features(model, preprocess, image_path)
         db[filename] = features_array
     print(len(db))
-    with open("aero-feats.pkl", "wb") as f:
+    with open(REPO_DIR / "aero-feats.pkl", "wb") as f:
         pickle.dump(db, f)
 
 if __name__ == "__main__":
