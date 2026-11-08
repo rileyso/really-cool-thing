@@ -1,4 +1,5 @@
 import argparse
+import csv
 from pathlib import Path
 import cv2
 import numpy as np
@@ -14,6 +15,7 @@ import networkx as nx
 import math
 from door_ocr import (load_reader, detect_door_text, texts_match,
                       matching_texts)
+from show_path_images import show_path_images
 
 ONEDRIVE_DIR = Path.home() / "OneDrive - The University of Sydney (Students)"
 DATASET_PATH = ONEDRIVE_DIR / "data_train"
@@ -24,7 +26,7 @@ QUERY_DIR = ONEDRIVE_DIR / "query"
 # QUERY_PATH = DATASET_PATH / "n216_door" / "n216_door_im13_131.jpg"
 # QUERY_PATH = QUERY_DIR / "18.png"  # was Screenshot 2026-10-30 132133.png
 # QUERY_PATH = QUERY_DIR / "7.jpeg"  # 220 door, was IMG_3677.jpeg
-QUERY_PATH = QUERY_DIR / "14.jpeg"  # 233 door, was IMG_3660.jpeg
+QUERY_PATH = QUERY_DIR / "20.png"  # 233 door, was IMG_3660.jpeg
 
 DESTINATION = ("stairwell","bottom")
 # DESTINATION = ("n216","door")
@@ -268,14 +270,19 @@ def find_best_match(query_path, ocr_reader, model, preprocess, db, door_db,
         "best_colour": candidate_colours[best_index],
     }
 
-def main(verbose=False):
+def main(verbose=False, query_filename=QUERY_PATH,
+         destination_key=DESTINATION):
     # Quiet by default: only the final route figure is shown. verbose also
     # shows the OCR, candidate and RANSAC figures and per-candidate output.
+    query_path = Path(query_filename)
+    if not query_path.is_absolute():
+        query_path = QUERY_DIR / query_path
+
     ocr_reader = load_reader()
     db, door_db = load_databases()
     model, preprocess = load_resnet18()
 
-    result = find_best_match(QUERY_PATH, ocr_reader, model, preprocess,
+    result = find_best_match(query_path, ocr_reader, model, preprocess,
                              db, door_db, verbose=verbose)
 
     best_index = result["best_index"]
@@ -295,7 +302,7 @@ def main(verbose=False):
     else:
         print(f"{'Query door text':<{label_width}}: "
               f"{blue}none detected{reset}")
-    print(f"{'Query image':<{label_width}}: {QUERY_PATH}")
+    print(f"{'Query image':<{label_width}}: {query_path}")
     print(f"{'Method':<{label_width}}: {result['method']}")
     print(f"{'ORB matches':<{label_width}}: {result['orb_matches']}")
     print(f"{'ORB inliers':<{label_width}}: "
@@ -322,9 +329,9 @@ def main(verbose=False):
     final = final.split('_')
     # print(final)
 
-
+    roomloc_path = "roomloc_coords.txt"
     try:
-        with open("roomloc_coords.txt", 'r') as file:
+        with open(roomloc_path, 'r') as file:
             content = file.read()
     except FileNotFoundError:
         print("Error: the file doesn't exist")
@@ -346,7 +353,8 @@ def main(verbose=False):
     source = next(node for node in node_list
                   if final[0] == node.room and final[1] == node.in_room)
     destination = next(node for node in node_list
-                       if DESTINATION[0] == node.room and DESTINATION[1] == node.in_room)
+                       if destination_key[0] == node.room
+                       and destination_key[1] == node.in_room)
 
     # print(f"destination {destination.room} coords:")
     # print(destination.x, destination.y)
@@ -424,20 +432,21 @@ def main(verbose=False):
     fig, axes = plt.subplots(1, 3, figsize=(12, 4))
 
     axes[0].imshow(cv2.cvtColor(bev, cv2.COLOR_BGR2RGB))
-    axes[0].set_title("Route")
+    axes[0].set_title(
+        f"Route\n{source_name} → {destination_name}"
+    )
 
     axes[1].imshow(queryc)
-    axes[1].set_title(f"Query\n{Path(QUERY_PATH).name}", color="blue")
+    axes[1].set_title(f"Query\n{query_path.name}", color="blue")
 
     axes[2].imshow(best_colour)
     axes[2].set_title(
         f"Match\n{Path(best_candidate_path).name}", color="green"
     )
-    matched_label = "; ".join(
-        query_text if query_text == candidate_text
-        else f"{query_text} ~ {candidate_text}"
-        for query_text, candidate_text in result["matched_texts"]
-    ) or "none"
+    matched_label = (
+        result["matched_texts"][0][1]
+        if result["matched_texts"] else "none"
+    )
     axes[2].text(
         0.5, -0.08, f"Matched text: {matched_label}",
         transform=axes[2].transAxes, ha="center", color="green",
@@ -454,13 +463,76 @@ def main(verbose=False):
 
     plt.tight_layout()
     fig.subplots_adjust(bottom=0.28)
-
+    close_enough = 20 # Angular distance (deg) which is close enough to be a match
+    show_path_images(path, close_enough, roomloc_path, DATASET_PATH)
     plt.show()
+
+def run_batch(query_dir=QUERY_DIR, log_path="query_results.csv"):
+    """Match every query image once and write a compact CSV log."""
+    query_dir = Path(query_dir)
+    query_paths = sorted(
+        path for path in query_dir.iterdir()
+        if path.suffix.lower() in {".jpg", ".jpeg", ".png"}
+    )
+    ocr_reader = load_reader()
+    db, door_db = load_databases()
+    model, preprocess = load_resnet18()
+
+    with open(log_path, "w", newline="", encoding="utf-8") as file:
+        writer = csv.writer(file)
+        writer.writerow([
+            "query_filename", "matched_filename", "method", "query_text",
+            "matched_text", "orb_matches", "ransac_inliers",
+        ])
+        for query_path in query_paths:
+            try:
+                result = find_best_match(
+                    query_path, ocr_reader, model, preprocess, db, door_db
+                )
+                matched_text = "; ".join(
+                    f"{query} ~ {candidate}"
+                    for query, candidate in result["matched_texts"]
+                )
+                writer.writerow([
+                    query_path.name,
+                    Path(result["best_candidate_path"]).name,
+                    result["method"],
+                    "; ".join(result["query_texts"]),
+                    matched_text,
+                    result["orb_matches"],
+                    result["ransac_inliers"],
+                ])
+                print(f"{query_path.name} -> "
+                      f"{Path(result['best_candidate_path']).name}")
+            except Exception as error:
+                writer.writerow([query_path.name, "ERROR", "", "", "", "", ""])
+                print(f"{query_path.name} -> ERROR: {error}")
+
+    print(f"Wrote {len(query_paths)} query results to {log_path}")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
+        "--batch", action="store_true",
+        help="match every image in the query directory and write a CSV log")
+    parser.add_argument(
+        "--log", default="query_results.csv",
+        help="CSV output path for --batch")
+    parser.add_argument(
         "--verbose", "-v", action="store_true",
         help="show the OCR, candidate and RANSAC figures and per-candidate "
              "output, not just the final route figure")
-    main(verbose=parser.parse_args().verbose)
+    parser.add_argument(
+        "--query", default=QUERY_PATH, type=Path,
+        help="query image filename in the query directory (or a full path)")
+    parser.add_argument(
+        "--destination", nargs=2, metavar=("ROOM", "LOCATION"),
+        default=DESTINATION,
+        help="destination node, for example: --destination stairwell bottom")
+    args = parser.parse_args()
+    if args.batch:
+        run_batch(log_path=args.log)
+    else:
+        main(verbose=args.verbose, query_filename=args.query,
+             destination_key=tuple(args.destination))
