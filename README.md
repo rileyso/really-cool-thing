@@ -41,16 +41,22 @@ query/
 - `query/` contains the photo to locate. The default filename is `query.jpg`; other files can be selected with `--query`.
 - Keep `roomloc_coords.txt` in the repository root; the map is stored at `assets/usyd_map.png`.
 
-Before the first query, generate the local feature databases:
+The feature databases store filenames, so the matching images must also exist in the local `data_train/` folders. If the dataset is still in OneDrive, copy it into the repository from PowerShell:
+
+```powershell
+Copy-Item -Recurse "$HOME\OneDrive - The University of Sydney (Students)\data_train\*" ".\data_train\"
+```
+
+If you copied a new dataset, regenerate the local feature databases:
 
 ```bash
 python -m navigation.extract_features
 python scripts/extract_door.py
 ```
 
-Run the main query pipeline from the repository root:
+Run the main query pipeline from the repository root. For example:
 
-```bash
+```powershell
 python -m navigation.query_main --query query.jpg --destination stairwell bottom
 ```
 
